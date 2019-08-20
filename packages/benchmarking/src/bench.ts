@@ -1,10 +1,8 @@
 import {
   AsyncBenchmark,
   SyncBenchmark,
-  Report,
   Mark,
   MarkSample,
-  Progress,
   ProgressWatcher,
 } from './types';
 
@@ -40,14 +38,14 @@ export async function run(
   clock: Clock,
   watcher?: ProgressWatcher,
 ): Promise<Mark> {
-  const durationInNanosec = BigInt(duration) * 1000000000n;
+  const durationLimit = duration * 1000000000;
   const _watcher = watcher !== undefined ? watcher : StubProgressWatcher;
 
   const runStartAt = clock();
   let runEndAt: bigint;
 
   let samples: MarkSample[] = [];
-  let sampleBuffers: bigint[] = [];
+  let sampleBuffers: number[] = [];
 
   let takeSample = false;
   let exit = false;
@@ -55,14 +53,14 @@ export async function run(
 
   while (true) {
     const { startAt, endAt } = await execution();
-    const elapsed = endAt - startAt;
+    const elapsed = Number(endAt - startAt);
 
     // Record raw elapsed time.
     sampleBuffers.push(elapsed);
 
     // Check if the test duration limit is reached.
-    const totalElapsed = endAt - runStartAt;
-    if (totalElapsed >= durationInNanosec) {
+    const elapsedTotal = Number(endAt - runStartAt);
+    if (elapsedTotal >= durationLimit) {
       // Take a sample before exiting.
       takeSample = true;
       exit = true;
@@ -70,9 +68,9 @@ export async function run(
 
     // When execution meets one of these conditions, we should take a sample:
     // * exceed 100ms since last sample been taken
-    // * buffer has more then 100,000 records
+    // * buffer has more then 10,000,000 records (100ns/op)
     const elapsedSinceLastSample = endAt - lastSampleTime;
-    if (elapsedSinceLastSample >= 100000000n) {
+    if (elapsedSinceLastSample >= 1000000000n) {
       takeSample = true;
     }
     if (sampleBuffers.length >= 100000) {
@@ -83,19 +81,19 @@ export async function run(
     if (takeSample === true) {
       takeSample = false;
 
-      const bufferElapsedTotal = sampleBuffers.reduce((sum, point) => sum + point, 0n);
+      const bufferElapsedTotal = sampleBuffers.reduce((sum, point) => sum + point, 0);
       samples.push({
         elapsedTotal: bufferElapsedTotal,
-        cycle: sampleBuffers.length,
+        opCount: sampleBuffers.length,
       });
 
       sampleBuffers = [];
       lastSampleTime = endAt;
 
       _watcher.notify({
-        sampleTotal: samples.length,
-        elapsed: totalElapsed,
-        duration: durationInNanosec,
+        sampleCount: samples.length,
+        sinceLastSample: elapsedTotal,
+        duration: durationLimit,
       });
     }
 
@@ -108,7 +106,7 @@ export async function run(
   return {
     startAt: runStartAt,
     endAt: runEndAt,
-    cycles: samples.reduce((total, sample) => total + sample.cycle, 0),
+    opCount: samples.reduce((total, sample) => total + sample.opCount, 0),
     samples,
   };
 }

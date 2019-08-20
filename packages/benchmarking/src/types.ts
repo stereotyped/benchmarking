@@ -9,9 +9,9 @@ export interface SyncBenchmark {
 export type Benchmark = SyncBenchmark | AsyncBenchmark;
 
 export interface Progress {
-  sampleTotal: number,
-  elapsed: bigint,
-  duration: bigint,
+  sampleCount: number,
+  sinceLastSample: number,
+  duration: number,
 }
 
 export interface ProgressWatcher {
@@ -19,28 +19,17 @@ export interface ProgressWatcher {
 }
 
 export interface MarkSample {
-  cycle: number,
-  elapsedTotal: bigint,
+  opCount: number,
+  elapsedTotal: number,
 }
 
 export interface Mark {
   startAt: bigint,
   endAt: bigint,
-  cycles: number,
+  opCount: number,
   samples: MarkSample[],
 }
 
-export interface ReportRow {
-  name: string,
-  values: string[],
-}
-
-export interface Report {
-  columns: string[],
-  rows: ReportRow[],
-  summary: string,
-}
-
-export interface Analyst {
-  analyse(mark: Mark): Promise<Report>
+export interface Analyst<T> {
+  analyse(mark: Mark): Promise<T>
 }

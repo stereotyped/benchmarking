@@ -29,11 +29,13 @@ export {
 } from './helpers';
 
 export {
+  StandardReport,
+} from './analysts/standard';
+
+export {
   AsyncBenchmark,
   SyncBenchmark,
   Benchmark,
-  Report,
-  ReportRow,
   Progress,
   ProgressWatcher,
 } from './types';

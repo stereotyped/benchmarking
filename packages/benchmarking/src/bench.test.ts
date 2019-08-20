@@ -62,7 +62,7 @@ describe('run', () => {
     expect(executionClock).toBeCalledTimes(4);
     expect(benchClock).toBeCalledTimes(1);
 
-    expect(mark.cycles).toBe(2);
+    expect(mark.opCount).toBe(2);
     expect(mark.startAt).toBe(0n);
     expect(mark.endAt).toBe(1000000000n);
 
