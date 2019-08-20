@@ -122,3 +122,4 @@ $RECYCLE.BIN/
 # Project
 /dist/
 /dev/
+/tsconfig.build.tsbuildinfo
