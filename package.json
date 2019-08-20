@@ -2,9 +2,16 @@
   "name": "@stereotyped/benchmarking",
   "version": "0.3.0",
   "description": "A simple and flexible benchmarking utility written in TypeScript.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "files": [
+    "dist/",
+    "package.json",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc -p tsconfig.json"
   },
   "repository": {
     "type": "git",
