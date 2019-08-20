@@ -1,21 +1,10 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "declaration": true,
-    "sourceMap": true,
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true
-  },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts"
-  ]
+    "extends": "./tsconfig.build.json",
+    "compilerOptions": {
+        "baseUrl": "./packages",
+        "paths": {
+            "@stereotyped/benchmarking": ["benchmarking/src"],
+            "@stereotyped/benchmarking-cli": ["benchmarking-cli/src"],
+        }
+    },
 }

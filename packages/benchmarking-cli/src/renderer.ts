@@ -3,9 +3,9 @@ const Table = require('cli-table3');
 
 import ProgressBar from 'progress';
 
-import { Report, Renderer, Progress, ProgressWatcher } from '../types';
+import { Report, Progress, ProgressWatcher } from '@stereotyped/benchmarking';
 
-export class CLI implements Renderer {
+export class CLI {
 
   private progressBar?: ProgressBar;
 

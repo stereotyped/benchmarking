@@ -1,48 +1,7 @@
 {
-  "name": "@stereotyped/benchmarking",
-  "version": "0.3.0",
-  "description": "A simple and flexible benchmarking utility written in TypeScript.",
-  "main": "dist/index.js",
-  "files": [
-    "dist/",
-    "package.json",
-    "LICENSE",
-    "README.md"
-  ],
-  "scripts": {
-    "test": "jest",
-    "build": "tsc -p tsconfig.json"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/stereotyped/benchmarking.git"
-  },
-  "keywords": [
-    "benchmark",
-    "benchmarking"
-  ],
-  "author": {
-    "name": "AaronJan",
-    "url": "https://github.com/aaronjan"
-  },
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/stereotyped/benchmarking/issues"
-  },
-  "homepage": "https://github.com/stereotyped/benchmarking#readme",
-  "devDependencies": {
-    "@types/jest": "^24.0.17",
-    "@types/mathjs": "^6.0.1",
-    "@types/node": "^12.7.2",
-    "@types/progress": "^2.0.3",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
-    "typescript": "^3.5.3"
-  },
-  "dependencies": {
-    "cli-table3": "^0.5.1",
-    "mathjs": "^6.1.0",
-    "progress": "^2.0.3"
-  }
+    "name": "@stereotyped/benchmarking",
+    "private": true,
+    "devDependencies": {
+        "lerna": "^3.16.4"
+    }
 }

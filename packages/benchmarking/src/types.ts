@@ -44,8 +44,3 @@ export interface Report {
 export interface Analyst {
   analyse(mark: Mark): Promise<Report>
 }
-
-export interface Renderer {
-  progressWatcher(): ProgressWatcher
-  renderReport(report: Report): Promise<void>
-}

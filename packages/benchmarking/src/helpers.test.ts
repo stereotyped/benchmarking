@@ -13,4 +13,3 @@ describe('isAsyncBenchmark', () => {
     expect(await helpers.isAsyncBenchmark(benchmark)).toBeTruthy();
   });
 });
-

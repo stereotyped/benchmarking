@@ -1,17 +1,13 @@
 import { run, runAsync, runSync, NodeClock } from './bench';
-import { CLI } from './renderers/cli';
 import { Standard } from './analysts/standard';
-import { Benchmark, Renderer } from './types';
+import { Benchmark, ProgressWatcher } from './types';
 import { isAsyncBenchmark } from './helpers';
-
-// TODO: More renders to come later.
-type Render = 'cli';
 
 export interface BenchmarkingOptions {
   /** Total test duration in seconds */
   duration: number,
   async?: boolean,
-  render?: Render,
+  progressWatcher?: ProgressWatcher,
 }
 
 export async function benchmarking(benchmark: Benchmark, options: BenchmarkingOptions) {
@@ -20,14 +16,24 @@ export async function benchmarking(benchmark: Benchmark, options: BenchmarkingOp
     async = await isAsyncBenchmark(benchmark);
   }
 
-  const renderer: Renderer = new CLI();
-  const progressWatcher = renderer.progressWatcher();
-
   const execution = async ? runAsync(benchmark, NodeClock) : runSync(benchmark, NodeClock);
-  const mark = await run(execution, options.duration, NodeClock, progressWatcher);
+  const mark = await run(execution, options.duration, NodeClock, options.progressWatcher);
 
   const analyst = new Standard();
-  const report = await analyst.analyse(mark);
 
-  await renderer.renderReport(report);
+  return await analyst.analyse(mark);
 }
+
+export {
+  isAsyncBenchmark,
+} from './helpers';
+
+export {
+  AsyncBenchmark,
+  SyncBenchmark,
+  Benchmark,
+  Report,
+  ReportRow,
+  Progress,
+  ProgressWatcher,
+} from './types';
