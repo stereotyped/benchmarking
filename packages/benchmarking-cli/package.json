@@ -1,6 +1,6 @@
 {
   "name": "@stereotyped/benchmarking-cli",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "A simple and flexible benchmarking utility written in TypeScript for `Node.js`.",
   "main": "dist/index.js",
   "files": [
@@ -43,7 +43,7 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@stereotyped/benchmarking": "^0.3.0",
+    "@stereotyped/benchmarking": "^0.4.0",
     "cli-table3": "^0.5.1",
     "ora": "^3.4.0",
     "progress": "^2.0.3"
