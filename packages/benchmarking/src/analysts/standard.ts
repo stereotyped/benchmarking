@@ -1,13 +1,5 @@
-import {
-  max as mathMax,
-  min as mathMin,
-  std as mathStdev,
-  bignumber,
-  quantileSeq,
-  BigNumber,
-} from 'mathjs';
-
 import { Analyst, Mark } from '../types';
+import { stdev, quantile } from './functions';
 
 export interface StandardReport {
   opCount: number,
@@ -43,23 +35,22 @@ export class Standard implements Analyst<StandardReport> {
 
     const timeSamples = mark.samples
       .map(sample => (sample.elapsedTotal / sample.opCount).toFixed(0))
-      .map(time => bignumber(time));
+      .map(time => parseInt(time));
 
-    // Because a typing issue, we have to do type-casting:
-    const quantile250ForTime: BigNumber = <BigNumber>quantileSeq(<any>timeSamples, bignumber(0.25));
-    const quantile5000ForTime: BigNumber = <BigNumber>quantileSeq(<any>timeSamples, bignumber(0.5));
-    const quantile9500ForTime: BigNumber = <BigNumber>quantileSeq(<any>timeSamples, bignumber(0.95));
-    const quantile9900ForTime: BigNumber = <BigNumber>quantileSeq(<any>timeSamples, bignumber(0.99));
+    const quantile250ForTime: number = quantile(timeSamples, 0.25);
+    const quantile5000ForTime: number = quantile(timeSamples, 0.5);
+    const quantile9500ForTime: number = quantile(timeSamples, 0.95);
+    const quantile9900ForTime: number = quantile(timeSamples, 0.99);
 
     const timeAvg: number = avgTimes(timeSamples, () => true);
-    const timeStdev: number = (<any>mathStdev(<any>timeSamples)).toNumber();
-    const timeMin: number = (<BigNumber>mathMin(<any>timeSamples)).toNumber();
-    const timeMax: number = (<BigNumber>mathMax(<any>timeSamples)).toNumber();
+    const timeStdev: number = stdev(timeSamples);
+    const timeMin: number = Math.min(...timeSamples);
+    const timeMax: number = Math.max(...timeSamples)
 
-    const avgTimeInQuantile250: number = avgTimes(timeSamples, (num: BigNumber) => num.lessThanOrEqualTo(quantile250ForTime));
-    const avgTimeInQuantile5000: number = avgTimes(timeSamples, (num: BigNumber) => num.lessThanOrEqualTo(quantile5000ForTime));
-    const avgTimeInQuantile9500: number = avgTimes(timeSamples, (num: BigNumber) => num.lessThanOrEqualTo(quantile9500ForTime));
-    const avgTimeInQuantile9900: number = avgTimes(timeSamples, (num: BigNumber) => num.lessThanOrEqualTo(quantile9900ForTime));
+    const avgTimeInQuantile250: number = avgTimes(timeSamples, num => num <= quantile250ForTime);
+    const avgTimeInQuantile5000: number = avgTimes(timeSamples, num => num <= quantile5000ForTime);
+    const avgTimeInQuantile9500: number = avgTimes(timeSamples, num => num <= quantile9500ForTime);
+    const avgTimeInQuantile9900: number = avgTimes(timeSamples, num => num <= quantile9900ForTime);
 
     return {
       opCount: mark.opCount,
@@ -89,9 +80,9 @@ export class Standard implements Analyst<StandardReport> {
 
 }
 
-export function avgTimes(nums: BigNumber[], filter: (num: BigNumber) => boolean): number {
+export function avgTimes(nums: number[], filter: (num: number) => boolean): number {
   const filtered = nums.filter(filter);
-  const sum = filtered.reduce((sum, num) => sum.add(num), bignumber(0));
+  const sum = filtered.reduce((sum, num) => sum + num, 0);
 
-  return sum.div(filtered.length).toNumber();
+  return sum / filtered.length;
 }
