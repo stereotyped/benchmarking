@@ -62,7 +62,7 @@ export class CLI {
 
     console.log(table.toString());
     console.log('');
-    console.log(`Executed ${report.opCount} ops in ${report.duration}.`);
+    console.log(`Executed ${report.opCount} ops in ${formatReadableTime(report.duration)}.`);
   }
 
 }
