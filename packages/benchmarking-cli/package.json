@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/stereotyped/benchmarking/tree/master/packages/benchmarking-cli#readme",
   "devDependencies": {
-    "@types/jest": "^24.0.17",
+    "@types/jest": "^24.0.18",
     "@types/node": "^12.7.2",
     "@types/progress": "^2.0.3",
     "jest": "^24.9.0",
