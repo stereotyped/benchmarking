@@ -15,7 +15,7 @@ A simple and flexible benchmarking utility written in TypeScript.
 ## TODOs
 
 * Docs
-* Double check the math
+* Benchmarks comparison
 * Support browser environment
 * More tests
 

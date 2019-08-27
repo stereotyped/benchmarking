@@ -1,22 +1,25 @@
 import {
-  Benchmark,
-  benchmarking as coreBenchmarking,
+  Operation,
+  benchmark as coreBenchmark,
 } from '@stereotyped/benchmarking';
 
-import { CLI } from './renderer';
+import { Renderer } from './renderer';
 
-export interface BenchmarkingOptions {
-  /** Total test duration in seconds */
-  duration: number,
+export interface BenchmarkOptions {
+  duration?: number,
+  cycles?: number,
 }
 
-export async function benchmarking(benchmark: Benchmark, options: BenchmarkingOptions) {
-  const renderer = new CLI();
-  const progressWatcher = renderer.progressWatcher();
+export async function benchmark(operation: Operation, options: BenchmarkOptions) {
+  const renderer = new Renderer({
+    duration: options.duration,
+    cycles: options.cycles,
+  });
+  const progressListener = renderer.progressListener();
 
-  const report = await coreBenchmarking(benchmark, {
+  const report = await coreBenchmark(operation, {
     ...options,
-    progressWatcher,
+    progressListener,
   });
   await renderer.renderReport(report);
 

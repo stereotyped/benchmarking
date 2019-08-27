@@ -35,3 +35,15 @@ export function quantile(nums: number[], q: number): number {
     return sorted[base];
   }
 }
+
+export function variance(nums: number[]): number {
+  const _mean = mean(nums);
+
+  return varianceWithMean(nums, _mean);
+}
+
+export function varianceWithMean(nums: number[], _mean: number): number {
+  const sum = nums.reduce((sum, num) => sum + ((num - _mean) ** 2), 0);
+
+  return sum / (nums.length - 1);
+}

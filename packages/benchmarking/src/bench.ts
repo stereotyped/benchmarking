@@ -1,9 +1,11 @@
 import {
-  AsyncBenchmark,
-  SyncBenchmark,
+  AsyncOperation,
+  SyncOperation,
   Mark,
-  MarkSample,
-  ProgressWatcher,
+  Sample,
+  ProgressListener,
+  Sampler,
+  Progress,
 } from './types';
 
 export interface ExecutionInfo {
@@ -19,7 +21,7 @@ export interface Clock {
   (): bigint
 }
 
-export const StubProgressWatcher: ProgressWatcher = {
+export const StubProgressWatcher: ProgressListener = {
   notify: () => void 0,
 };
 
@@ -28,76 +30,60 @@ export const NodeClock: Clock = () => process.hrtime.bigint();
 /**
  * 
  * @param execution 
- * @param duration {number} Test duration, in seconds
+ * @param sampler {Sampler}
  * @param clock {Clock}
- * @param watcher 
+ * @param listener
  */
 export async function run(
   execution: Execution,
-  duration: number,
+  sampler: Sampler,
   clock: Clock,
-  watcher?: ProgressWatcher,
+  listener?: ProgressListener,
 ): Promise<Mark> {
-  const durationLimit = duration * 1000000000;
-  const _watcher = watcher !== undefined ? watcher : StubProgressWatcher;
+  const _watcher = listener !== undefined ? listener : StubProgressWatcher;
 
   const runStartAt = clock();
   let runEndAt: bigint;
+  let cycles = 0;
 
-  let samples: MarkSample[] = [];
-  let sampleBuffers: number[] = [];
+  let samples: Sample[] = [];
+  let buffers: number[] = [];
 
-  let takeSample = false;
-  let exit = false;
-  let lastSampleTime = runStartAt;
+  let lastSamplingTime = runStartAt;
 
   while (true) {
     const { startAt, endAt } = await execution();
+    cycles ++;
     const elapsed = Number(endAt - startAt);
 
     // Record raw elapsed time.
-    sampleBuffers.push(elapsed);
+    buffers.push(elapsed);
 
-    // Check if the test duration limit is reached.
-    const elapsedTotal = Number(endAt - runStartAt);
-    if (elapsedTotal >= durationLimit) {
-      // Take a sample before exiting.
-      takeSample = true;
-      exit = true;
-    }
+    const progress: Progress = {
+      cycles,
+      elapsedSinceLastSampling: endAt - lastSamplingTime,
+      elapsed: endAt - runStartAt,
+      buffers,
+      samples,
+    };
 
-    // When execution meets one of these conditions, we should take a sample:
-    // * exceed 100ms since last sample been taken
-    // * buffer has more then 10,000,000 records (100ns/op)
-    const elapsedSinceLastSample = endAt - lastSampleTime;
-    if (elapsedSinceLastSample >= 1000000000n) {
-      takeSample = true;
-    }
-    if (sampleBuffers.length >= 100000) {
-      takeSample = true;
-    }
+    const { sample, end } = sampler.decide(progress);
 
     // Take a sample if necessary.
-    if (takeSample === true) {
-      takeSample = false;
-
-      const bufferElapsedTotal = sampleBuffers.reduce((sum, point) => sum + point, 0);
+    if (sample === true) {
+      const bufferElapsedTotal = buffers.reduce((sum, point) => sum + point, 0);
       samples.push({
         elapsedTotal: bufferElapsedTotal,
-        opCount: sampleBuffers.length,
+        cycles: buffers.length,
       });
 
-      sampleBuffers = [];
-      lastSampleTime = endAt;
+      buffers = [];
+      lastSamplingTime = endAt;
 
-      _watcher.notify({
-        sampleCount: samples.length,
-        sinceLastSample: elapsedTotal,
-        duration: durationLimit,
-      });
+      _watcher.notify(progress);
     }
 
-    if (exit) {
+    if (end === true) {
       runEndAt = endAt;
       break;
     }
@@ -106,12 +92,12 @@ export async function run(
   return {
     startAt: runStartAt,
     endAt: runEndAt,
-    opCount: samples.reduce((total, sample) => total + sample.opCount, 0),
+    cycles,
     samples,
   };
 }
 
-export function runAsync(benchmark: AsyncBenchmark, clock: Clock): Execution {
+export function runAsync(benchmark: AsyncOperation, clock: Clock): Execution {
   return async () => {
     const startAt = clock();
     await benchmark();
@@ -121,7 +107,7 @@ export function runAsync(benchmark: AsyncBenchmark, clock: Clock): Execution {
   };
 }
 
-export function runSync(benchmark: SyncBenchmark, clock: Clock): Execution {
+export function runSync(benchmark: SyncOperation, clock: Clock): Execution {
   return async () => {
     const startAt = clock();
     benchmark();

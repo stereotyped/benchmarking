@@ -1,7 +1,7 @@
-import { Benchmark } from './types';
+import { Operation } from './types';
 
-export async function isAsyncBenchmark(benchmark: Benchmark): Promise<boolean> {
-  const result = benchmark();
+export async function isAsyncOperation(operation: Operation): Promise<boolean> {
+  const result = operation();
   if (result instanceof Promise ) {
     await result;
 

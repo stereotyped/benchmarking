@@ -2,39 +2,98 @@
 const Table = require('cli-table3');
 
 import ProgressBar from 'progress';
-import { Progress, ProgressWatcher, StandardReport } from '@stereotyped/benchmarking';
+import ora from 'ora';
+import { Progress, ProgressListener, DetailedReport } from '@stereotyped/benchmarking';
 
 import { formatReadableOPS, formatReadableTime } from './helpers';
 
-export class CLI {
+export class Renderer {
 
+  private oraInstance?: ora.Ora;
   private progressBar?: ProgressBar;
+  private started: boolean;
 
-  progressWatcher(): ProgressWatcher {
+  private durationLimitInNanosecs?: bigint;
+  private cycleLimit?: number;
+  private benchmarkHasLimit: boolean;
+
+  constructor({ duration, cycles }: { duration?: number, cycles?: number }) {
+    if (duration === undefined && cycles === undefined) {
+      this.benchmarkHasLimit = false;
+    }
+    this.benchmarkHasLimit = true;
+
+    if (duration !== undefined) {
+      this.durationLimitInNanosecs = BigInt(duration) * 1000000000n;
+    }
+    if (cycles !== undefined) {
+      this.cycleLimit = cycles;
+    }
+
+    this.started = false;
+  }
+
+  progressListener(): ProgressListener {
     return {
-      notify: this.renderProgress,
+      notify: progress => this.renderProgress(progress),
     };
   }
 
-  renderProgress(progress: Progress) {
-    if (this.progressBar === undefined) {
-      this.progressBar = new ProgressBar(':bar :percent', {
-        total: 100,
+  private initializeRendering() {
+    if (this.started === true) {
+      return;
+    }
+    this.started = true;
+
+    if (this.benchmarkHasLimit === false) {
+      this.oraInstance = ora({
+        text: 'Benchmarking...',
       });
+      this.oraInstance.start();
+      return;
     }
 
-    const elapsed = parseInt((progress.sinceLastSample / 1000000).toString());
-    const duration = parseInt((progress.duration / 1000000).toString());
-    const ratio = elapsed / duration;
+    this.progressBar = new ProgressBar(':bar :percent', {
+      total: 100,
+    });
+  }
+
+  private updateProgress(progress: Progress) {
+    if (this.progressBar === undefined) {
+      return;
+    }
+
+    let durationProgressRatio = 0;
+    if (this.durationLimitInNanosecs !== undefined) {
+      durationProgressRatio = parseInt(progress.elapsed.toString()) / parseInt(this.durationLimitInNanosecs.toString());
+    }
+    let cycleProgressRatio = 0;
+    if (this.cycleLimit !== undefined) {
+      cycleProgressRatio = progress.cycles / this.cycleLimit;
+    }
+    const ratio = Math.max(durationProgressRatio, cycleProgressRatio);
 
     this.progressBar.update(ratio);
+  }
 
-    if (this.progressBar.complete) {
-      console.log('\nDone.\n');
+  private finishProgressing() {
+    if (this.oraInstance !== undefined) {
+      this.oraInstance.stop();
+      return;
+    }
+    if (this.progressBar !== undefined) {
+      this.progressBar.update(1);
     }
   }
 
-  async renderReport(report: StandardReport): Promise<void> {
+  renderProgress(progress: Progress) {
+    this.initializeRendering();
+    this.updateProgress(progress);
+  }
+
+  async renderReport(report: DetailedReport): Promise<void> {
+    this.finishProgressing();
+
     const table = new Table({
       head: [
         'Stat',
@@ -62,7 +121,7 @@ export class CLI {
 
     console.log(table.toString());
     console.log('');
-    console.log(`Executed ${report.opCount} ops in ${formatReadableTime(report.duration)}.`);
+    console.log(`Executed ${report.cycles} ops in ${formatReadableTime(report.duration)}.`);
   }
 
 }

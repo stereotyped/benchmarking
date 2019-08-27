@@ -1,15 +1,15 @@
 import * as helpers from './helpers';
 
-describe('isAsyncBenchmark', () => {
+describe('isAsyncOperation', () => {
   test('sync', async () => {
     const benchmark = () => void 0;
 
-    expect(await helpers.isAsyncBenchmark(benchmark)).toBeFalsy();
+    expect(await helpers.isAsyncOperation(benchmark)).toBeFalsy();
   });
 
   test('async', async () => {
     const benchmark = () => Promise.resolve();
 
-    expect(await helpers.isAsyncBenchmark(benchmark)).toBeTruthy();
+    expect(await helpers.isAsyncOperation(benchmark)).toBeTruthy();
   });
 });

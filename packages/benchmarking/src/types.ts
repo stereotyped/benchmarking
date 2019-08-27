@@ -1,33 +1,49 @@
-export interface AsyncBenchmark {
+export interface AsyncOperation {
   (): Promise<any>
 }
 
-export interface SyncBenchmark {
+export interface SyncOperation {
   (): any
 }
 
-export type Benchmark = SyncBenchmark | AsyncBenchmark;
+export type Operation = SyncOperation | AsyncOperation;
 
 export interface Progress {
-  sampleCount: number,
-  sinceLastSample: number,
-  duration: number,
+  cycles: number,
+  /** In nanoseconds. */
+  elapsedSinceLastSampling: bigint,
+  /** In nanoseconds. */
+  elapsed: bigint,
+  // TODO:
+  /** In nanoseconds. */
+  // duration: number | undefined,
+  buffers: number[],
+  samples: Sample[],
 }
 
-export interface ProgressWatcher {
+export interface SamplerDecision {
+  sample: boolean,
+  end: boolean,
+}
+
+export interface Sampler {
+  decide(progress: Progress): SamplerDecision
+}
+
+export interface ProgressListener {
   notify(progress: Progress): any
 }
 
-export interface MarkSample {
-  opCount: number,
+export interface Sample {
+  cycles: number,
   elapsedTotal: number,
 }
 
 export interface Mark {
   startAt: bigint,
   endAt: bigint,
-  opCount: number,
-  samples: MarkSample[],
+  cycles: number,
+  samples: Sample[],
 }
 
 export interface Analyst<T> {

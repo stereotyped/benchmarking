@@ -45,6 +45,7 @@
   "dependencies": {
     "@stereotyped/benchmarking": "^0.3.0",
     "cli-table3": "^0.5.1",
+    "ora": "^3.4.0",
     "progress": "^2.0.3"
   }
 }

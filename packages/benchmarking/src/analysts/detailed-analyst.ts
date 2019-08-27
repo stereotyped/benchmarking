@@ -1,8 +1,8 @@
 import { Analyst, Mark } from '../types';
-import { stdev, quantile } from './functions';
+import { stdev, quantile } from '../math';
 
-export interface StandardReport {
-  opCount: number,
+export interface DetailedReport {
+  cycles: number,
   duration: number,
   time: {
     '2.5%': number,
@@ -28,13 +28,13 @@ export interface StandardReport {
 
 const OneSecondInNanoseconds = 1000000000;
 
-export class Standard implements Analyst<StandardReport> {
+export class DetailedAnalyst implements Analyst<DetailedReport> {
 
-  async analyse(mark: Mark): Promise<StandardReport> {
+  async analyse(mark: Mark): Promise<DetailedReport> {
     const duration = Number(mark.endAt - mark.startAt);
 
     const timeSamples = mark.samples
-      .map(sample => (sample.elapsedTotal / sample.opCount).toFixed(0))
+      .map(sample => (sample.elapsedTotal / sample.cycles).toFixed(0))
       .map(time => parseInt(time));
 
     const quantile250ForTime: number = quantile(timeSamples, 0.25);
@@ -43,7 +43,11 @@ export class Standard implements Analyst<StandardReport> {
     const quantile9900ForTime: number = quantile(timeSamples, 0.99);
 
     const timeAvg: number = avgTimes(timeSamples, () => true);
-    const timeStdev: number = stdev(timeSamples);
+    let timeStdev: number = stdev(timeSamples);
+    if (isNaN(timeStdev)) {
+      timeStdev = 0;
+    }
+
     const timeMin: number = Math.min(...timeSamples);
     const timeMax: number = Math.max(...timeSamples)
 
@@ -53,7 +57,7 @@ export class Standard implements Analyst<StandardReport> {
     const avgTimeInQuantile9900: number = avgTimes(timeSamples, num => num <= quantile9900ForTime);
 
     return {
-      opCount: mark.opCount,
+      cycles: mark.cycles,
       duration,
       time: {
         '2.5%': avgTimeInQuantile250,

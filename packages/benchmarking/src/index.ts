@@ -1,41 +1,56 @@
 import { run, runAsync, runSync, NodeClock } from './bench';
-import { Standard } from './analysts/standard';
-import { Benchmark, ProgressWatcher } from './types';
-import { isAsyncBenchmark } from './helpers';
+import { DetailedAnalyst } from './analysts';
+import { Operation, ProgressListener, Sampler } from './types';
+import { isAsyncOperation } from './helpers';
+import { Adaptableampler, PeriodicSampler } from './samplers';
 
-export interface BenchmarkingOptions {
+export interface BenchmarkOptions {
   /** Total test duration in seconds */
-  duration: number,
+  duration?: number,
+  cycles?: number,
   async?: boolean,
-  progressWatcher?: ProgressWatcher,
+  progressListener?: ProgressListener,
 }
 
-export async function benchmarking(benchmark: Benchmark, options: BenchmarkingOptions) {
+export async function benchmark(operation: Operation, options: BenchmarkOptions) {
   let async = options.async;
   if (async === undefined) {
-    async = await isAsyncBenchmark(benchmark);
+    async = await isAsyncOperation(operation);
   }
 
-  const execution = async ? runAsync(benchmark, NodeClock) : runSync(benchmark, NodeClock);
-  const mark = await run(execution, options.duration, NodeClock, options.progressWatcher);
+  const sampler = createSampler(options);
+  const execution = async ? runAsync(operation, NodeClock) : runSync(operation, NodeClock);
+  const mark = await run(execution, sampler, NodeClock, options.progressListener);
 
-  const analyst = new Standard();
+  const analyst = new DetailedAnalyst();
 
   return await analyst.analyse(mark);
 }
 
+export function createSampler(options: BenchmarkOptions): Sampler {
+  if (options.duration === undefined && options.cycles === undefined) {
+    return new Adaptableampler();
+  }
+
+  return new PeriodicSampler({
+    duration: options.duration,
+    cycles: options.cycles,
+  });
+}
+
 export {
-  isAsyncBenchmark,
+  isAsyncOperation as isAsyncBenchmark,
 } from './helpers';
 
 export {
-  StandardReport,
-} from './analysts/standard';
+  DetailedAnalyst,
+  DetailedReport,
+} from './analysts';
 
 export {
-  AsyncBenchmark,
-  SyncBenchmark,
-  Benchmark,
+  AsyncOperation,
+  SyncOperation,
+  Operation,
   Progress,
-  ProgressWatcher,
+  ProgressListener,
 } from './types';
