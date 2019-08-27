@@ -2,8 +2,9 @@
 const Table = require('cli-table3');
 
 import ProgressBar from 'progress';
+import { Progress, ProgressWatcher, StandardReport } from '@stereotyped/benchmarking';
 
-import { Report, Progress, ProgressWatcher } from '@stereotyped/benchmarking';
+import { formatReadableOPS, formatReadableTime } from './helpers';
 
 export class CLI {
 
@@ -22,8 +23,8 @@ export class CLI {
       });
     }
 
-    const elapsed = parseInt((progress.elapsed / 1000000n).toString());
-    const duration = parseInt((progress.duration / 1000000n).toString());
+    const elapsed = parseInt((progress.sinceLastSample / 1000000).toString());
+    const duration = parseInt((progress.duration / 1000000).toString());
     const ratio = elapsed / duration;
 
     this.progressBar.update(ratio);
@@ -33,17 +34,35 @@ export class CLI {
     }
   }
 
-  async renderReport(report: Report): Promise<void> {
+  async renderReport(report: StandardReport): Promise<void> {
     const table = new Table({
-      head: report.columns,
+      head: [
+        'Stat',
+        '2.5%',
+        '50%',
+        '95%',
+        '99%',
+        'Avg',
+        'Stdev',
+        'Min',
+        'Max',
+      ],
     });
-    const tableRows = report.rows
-      .map(row => [row.name, ...row.values]);
+    const tableRows: Array<string[]> = [];
+
+    tableRows.push([
+      'Time/Op',
+      ...Object.values(report.time).map(time => formatReadableTime(time)),
+    ]);
+    tableRows.push([
+      'Ops/sec',
+      ...Object.values(report.ops).map(ops => formatReadableOPS(ops)),
+    ]);
     table.push(...tableRows);
 
     console.log(table.toString());
     console.log('');
-    console.log(report.summary);
+    console.log(`Executed ${report.opCount} ops in ${report.duration}.`);
   }
 
 }
