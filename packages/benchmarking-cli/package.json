@@ -1,6 +1,6 @@
 {
   "name": "@stereotyped/benchmarking-cli",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A simple and flexible benchmarking utility written in TypeScript for `Node.js`.",
   "main": "dist/index.js",
   "files": [
