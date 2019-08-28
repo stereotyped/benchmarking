@@ -27,3 +27,20 @@ describe('variance', () => {
     expect(v).toBe(33.2);
   });
 });
+
+describe('student\'s t-test', () => {
+  it('should works - small', () => {
+    const aNums: number[] = [150, 100, 210, 300, 200, 210, 300];
+    const bNums: number[] = [120, 125, 160, 130, 200, 170, 200];
+
+    expect(math.tTest(aNums, bNums)).toBe(1.7113031128409284);
+  });
+
+  it('should works - big', () => {
+    const aNums: number[] = [150, 350, 210, 300, 200, 210, 300];
+    const bNums: number[] = [120, 80, 160, 130, 200, 170, 200];
+
+    expect(math.tTest(aNums, bNums)).toBe(2.9724905041328977);
+  });
+});
+

@@ -1,12 +1,12 @@
-import { Sampler, Progress } from '../types';
-import { mean, varianceWithMean, stdev } from '../math';
+import { Sampler, Sample, Progress } from '../types';
+import { tTest } from '../math';
 
 interface Table {
   [df: string]: number,
 }
 
 /**
-* T-Distribution two-tailed critical values for 95% confidence.
+* T-Distribution two-tailed critical values for 97.5% confidence.
 * For more info see http://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm.
 */
 const TDTable: Table = {
@@ -20,35 +20,67 @@ const TDTable: Table = {
 
 export class Adaptableampler implements Sampler {
 
+  private round: number;
+  private needNewBatch: boolean;
+  private batchSize: number;
+  private lastBatchOffset: number;
+  private lastBatchSamples: Sample[];
+
+  constructor() {
+    this.round = 1;
+    this.needNewBatch = true;
+    this.batchSize = 5;
+    this.lastBatchOffset = 0;
+    this.lastBatchSamples = [];
+  }
+
   decide(progress: Progress) {
-    const samples = progress.samples
+    // `+ 1` because current buffer has not been added to samples.
+    const currentSampleSize = progress.samples.length + 1 - this.lastBatchOffset;
+
+    if (currentSampleSize < this.batchSize) {
+      return { sample: true, end: false };
+    }
+
+    if (this.needNewBatch === true) {
+      this.lastBatchSamples = progress.samples
+        .slice(this.lastBatchOffset)
+        .concat({ cycles: 1, elapsedTotal: progress.elapsed });
+      this.needNewBatch = false;
+      this.lastBatchOffset = currentSampleSize;
+
+      return { sample: true, end: false };
+    }
+
+    // Compare two batches.
+    const lTimes = this.lastBatchSamples
+      .map(sample => sample.elapsedTotal);
+    const cTimes = progress.samples
+      .slice(this.lastBatchOffset)
       .map(sample => sample.elapsedTotal / sample.cycles)
       .concat(progress.buffers);
 
-    // Compute the mean.
-    const m = mean(samples);
-    const v = varianceWithMean(samples, m);
-    const sd = Math.sqrt(v);
-    // Compute the sample standard error of the mean (a.k.a. the standard deviation of the sampling distribution of the sample mean).
-    const sem = sd / Math.sqrt(samples.length);
+    const t = tTest(lTimes, cTimes);
     // Compute the degrees of freedom.
-    const df = samples.length - 1;
+    const df = lTimes.length + cTimes.length - 2;
     // Compute the critical value.
     const index: string = (Math.round(df) || 1).toString();
     // T-Value.
     const tv = TDTable[index] !== undefined ? TDTable[index] : TDTable.infinity;
-    // Compute the margin of error.
-    const moe = sem * tv;
-    // Compute the relative margin of error.
-    const rmoe = (moe / m) * 100 || 0;
 
-    const minSampleSize = Math.ceil((tv * tv * sd * sd) / (moe * moe));
-
-    if (samples.length >= minSampleSize) {
+    // If the t-value is acceptable, then stop sampling.
+    if (t <= tv || this.round >= 3) {
       return { sample: true, end: true };
     }
+
+    // If it's not, we start a new batch.
+    this.needNewBatch = true;
+    this.batchSize = this.batchSize * 2;
+    this.round++;
 
     return { sample: true, end: false };
   }
 
 }
+
+

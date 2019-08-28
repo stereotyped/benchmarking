@@ -16,7 +16,12 @@ export function mean(nums: number[]): number {
 
 export function stdev(nums: number[]): number {
   const m = mean(nums);
-  const diffSqredArr = nums.map(num => (num - m) ** 2);
+
+  return stdevWithMean(nums, m);
+}
+
+export function stdevWithMean(nums: number[], _mean: number): number {
+  const diffSqredArr = nums.map(num => (num - _mean) ** 2);
 
   return Math.sqrt(
     sum(diffSqredArr) / (nums.length - 1)
@@ -47,3 +52,20 @@ export function varianceWithMean(nums: number[], _mean: number): number {
 
   return sum / (nums.length - 1);
 }
+
+export function tTest(aNums: number[], bNums: number[]): number {
+  const lSize = aNums.length;
+  const cSize = bNums.length;
+
+  const lMean = mean(aNums);
+  const cMean = mean(bNums);
+  const lastSd = stdevWithMean(aNums, lMean);
+  const currentSd = stdevWithMean(bNums, cMean);
+
+  const a = (lSize + cSize) / (lSize * cSize);
+  const b = ((lSize - 1) * (lastSd ** 2) + (cSize - 1) * (currentSd ** 2)) / (lSize + cSize - 2);
+  const t = Math.abs(lMean - cMean) / Math.sqrt(a * b);
+
+  return t;
+}
+
