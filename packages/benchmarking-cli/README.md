@@ -8,16 +8,11 @@ A simple and flexible benchmarking utility written in TypeScript.
 ## Features
 
 * Typed (Written in TypeScript)
-* support synchronous or promise-based asynchronous functions
-* modular design, simple to use, simple to read
 
 
 ## TODOs
 
-* Docs
-* Double check the math
-* Support browser environment
-* More tests
+* Plots
 
 
 ## Installation
@@ -42,7 +37,7 @@ TODO
 
 ## Credits
 
-Inspired by `Autocannon`, `benchmark.js`.
+TODO
 
 
 ## License
