@@ -20,8 +20,9 @@ export class Renderer {
   constructor({ duration, cycles }: { duration?: number, cycles?: number }) {
     if (duration === undefined && cycles === undefined) {
       this.benchmarkHasLimit = false;
+    } else {
+      this.benchmarkHasLimit = true;
     }
-    this.benchmarkHasLimit = true;
 
     if (duration !== undefined) {
       this.durationLimitInNanosecs = BigInt(duration) * 1000000000n;
