@@ -11,12 +11,11 @@ export type Operation = SyncOperation | AsyncOperation;
 export interface Progress {
   cycles: number,
   /** In nanoseconds. */
-  elapsedSinceLastSampling: bigint,
+  elapsedSinceLastSampling: number,
   /** In nanoseconds. */
-  elapsed: bigint,
-  // TODO:
+  elapsed: number,
   /** In nanoseconds. */
-  // duration: number | undefined,
+  elapsedTotal: number,
   buffers: number[],
   samples: Sample[],
 }

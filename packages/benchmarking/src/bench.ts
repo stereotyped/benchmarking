@@ -53,7 +53,7 @@ export async function run(
 
   while (true) {
     const { startAt, endAt } = await execution();
-    cycles ++;
+    cycles++;
     const elapsed = Number(endAt - startAt);
 
     // Record raw elapsed time.
@@ -61,8 +61,9 @@ export async function run(
 
     const progress: Progress = {
       cycles,
-      elapsedSinceLastSampling: endAt - lastSamplingTime,
-      elapsed: endAt - runStartAt,
+      elapsedSinceLastSampling: Number(endAt - lastSamplingTime),
+      elapsed,
+      elapsedTotal: Number(endAt - runStartAt),
       buffers,
       samples,
     };

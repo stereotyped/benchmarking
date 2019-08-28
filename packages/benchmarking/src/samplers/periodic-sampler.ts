@@ -2,7 +2,7 @@ import { Sampler, Progress } from '../types';
 
 export class PeriodicSampler implements Sampler {
 
-  private durationInNanosecs?: bigint;
+  private durationInNanosecs?: number;
   private cycles?: number;
 
   constructor(options: { duration?: number, cycles?: number }) {
@@ -12,11 +12,11 @@ export class PeriodicSampler implements Sampler {
       throw new Error('Should specify `duration` or `cycles`, otherwise PeriodicSampler doesn\'t know when to stop benchmark.');
     }
 
-    this.durationInNanosecs = BigInt(duration) * 1000000000n;
+    this.durationInNanosecs = duration !== undefined ? (duration * 1000000000) : undefined;
     this.cycles = cycles;
   }
 
-  private exceededDuration(elapsed: bigint): boolean {
+  private exceededDuration(elapsed: number): boolean {
     if (this.durationInNanosecs === undefined) {
       return false;
     }
@@ -33,7 +33,7 @@ export class PeriodicSampler implements Sampler {
   }
 
   decide(progress: Progress) {
-    if (this.exceededDuration(progress.elapsed) || this.exceededCycles(progress.cycles)) {
+    if (this.exceededDuration(progress.elapsedTotal) || this.exceededCycles(progress.cycles)) {
       return { sample: true, end: true };
     }
 
