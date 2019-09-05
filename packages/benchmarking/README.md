@@ -23,6 +23,7 @@ A simple and flexible benchmarking utility written in TypeScript.
 * Run in parallel
 * Support browser environment
 * More tests
+* Support warm up
 
 
 ## Installation
